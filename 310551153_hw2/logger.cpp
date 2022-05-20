@@ -102,6 +102,29 @@ int creat(const char *path, mode_t mode){
     return ret;
 }
 
+int creat64(const char *path, mode_t mode){
+    if(!flag_fd) file_init();
+
+    auto new_creat = (int (*)(const char*, mode_t))dlsym(RTLD_NEXT, "creat64");
+    string out_path = "[logger] creat64(";
+    char abs_path[100];
+    char* exist = realpath(path,abs_path);
+    if(exist == NULL)
+        out_path += "\"" + string(path) + "\",";
+    else
+        out_path += "\"" + string(abs_path) + "\",";
+    
+    char mode_value[10];
+    sprintf(mode_value,"%03o",mode);
+    out_path += string(mode_value) + ") = ";
+
+    int ret = new_creat(path,mode);
+
+    out_path += to_string(ret) + "\n";
+    print(out_path);
+    return ret;
+}
+
 int close(int fd){
     if(!flag_fd) file_init();
 
@@ -462,4 +485,18 @@ FILE* tmpfile(void){
     print(out_path);
     return ret;
 }
+
+FILE* tmpfile64(void){
+    if(!flag_fd) file_init();
+
+    auto new_tmpfile = (FILE* (*)(void))dlsym(RTLD_NEXT, "tmpfile64");
+    string out_path = "[logger] tmpfile64() = ";
+    FILE* ret = new_tmpfile();
+    char buf[20];
+    sprintf(buf,"%p", ret);
+    out_path += string(buf) + "\n";
+    print(out_path);
+    return ret;
+}
+
 
